@@ -103,7 +103,6 @@ class LamportMutex:
     self.lock.release()
     print(f"Received all REPLIES for {request}. Waiting until head of queue...")
     
-
     while self.queue[0] != request: continue
     print(f"Request {request} at head of queue. Ready to perform operation.")
 
