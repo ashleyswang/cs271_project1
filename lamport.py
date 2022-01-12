@@ -1,5 +1,4 @@
 import heapq
-import os
 import pickle
 import socket
 import sys

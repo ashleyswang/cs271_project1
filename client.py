@@ -28,6 +28,9 @@ def handle_input():
       release()
     elif user_input == "queue":
       print(mutex.queue)
+    # elif user_input == "balance":
+    #   pass
+      # start new thread that gets the balance
     else:
       # pid, data = user_input.split(maxsplit=1)
       # sock = mutex.get_client(int(pid))
@@ -51,6 +54,9 @@ def release():
   print("Sending RELEASE to Clients...")
   threading.Thread(target=mutex.client_release).start()
 
+def balance():
+  threading.Thread(target=bc.get_balance).start()
+
 if __name__ == "__main__":
   if len(sys.argv) != 2:
     print(f'Usage: python {sys.argv[0]} <processId>')
@@ -59,7 +65,10 @@ if __name__ == "__main__":
   PID = int(sys.argv[1])
   mutex = LamportMutex(PID)
 
+  # Connect to Client Machines
   listen()
   connect()
+
+  # TODO: Connects to Server Machine
   handle_input()
   do_exit()
