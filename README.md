@@ -7,7 +7,7 @@ Client behavior based on PID:
 - Client 2: connects to Client 1, listens for Client 3
 - Client 3: connects to Client 1 & 2
 
-This behavior is automatically executed once the client is started. No additional steps to connect to clients are needed. 
+This behavior is automatically executed once the client is started. No additional steps to connect to clients are needed if running Client 1, 2, and 3 in that order.
 > Please note only valid PIDs are 1, 2, and 3.   
 
 Questions for TA:

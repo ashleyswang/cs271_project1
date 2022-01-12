@@ -22,10 +22,17 @@ def handle_input():
     user_input = input()
     if user_input == "exit" or user_input == "quit":
       do_exit()
+    elif user_input == "request":
+      request()
+    elif user_input == "release":
+      release()
+    elif user_input == "queue":
+      print(mutex.queue)
     else:
-      pid, data = user_input.split(maxsplit=1)
-      sock = mutex.get_client(int(pid))
-      sock.sendall(data.encode("utf8")) 
+      # pid, data = user_input.split(maxsplit=1)
+      # sock = mutex.get_client(int(pid))
+      # sock.sendall(data.encode("utf8")) 
+      pass
 
 def listen(): 
   print("Listening for Client Connections...")
@@ -36,6 +43,14 @@ def connect():
   for i in range(1, PID):
     mutex.connect(i)
 
+def request():
+  print("Sending REQUEST to Clients...")
+  threading.Thread(target=mutex.client_request).start()
+
+def release():
+  print("Sending RELEASE to Clients...")
+  threading.Thread(target=mutex.client_release).start()
+
 if __name__ == "__main__":
   if len(sys.argv) != 2:
     print(f'Usage: python {sys.argv[0]} <processId>')
@@ -44,5 +59,7 @@ if __name__ == "__main__":
   PID = int(sys.argv[1])
   mutex = LamportMutex(PID)
 
+  listen()
+  connect()
   handle_input()
   do_exit()
