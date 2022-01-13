@@ -12,6 +12,7 @@ DELAY = 2
 
 def do_exit():
   MUTEX.close()
+  SOCKET.close()
   os._exit(0)
 
 
@@ -29,7 +30,7 @@ def handle_input():
     elif data[0] == "transfer":
       try: 
         recipient = int(data[1])
-        amount = float(data[2])
+        amount = float(data[2].strip('$'))
         if recipient not in [1, 2, 3] or recipient == PID:
           raise NameError('InvalidPID')
         make_transfer(recipient, amount)
