@@ -1,61 +1,80 @@
+import os
+import pickle
 import socket
+import sys
 import threading
 import time
-import sys
-import os
-import heapq
 
 from lamport import LamportMutex 
+from utilities import *
 
-queue = []                  # Queue of requests
-clients = []                # Sockets for connected clients
-
-LOCK = threading.Lock()     # Lock for Priority Queue Requests
-LLC_LOCK = threading.Lock() # Lock for updating
+DELAY = 2
 
 def do_exit():
-  mutex.close()
+  MUTEX.close()
   os._exit(0)
+
 
 def handle_input():
   while True:
-    user_input = input()
-    if user_input == "exit" or user_input == "quit":
+    try:
+      data = input().split()
+    except Exception: 
+      print("Invalid command. Valid inputs are 'balance', 'transfer', or 'exit/quit'.")
+    
+    if data[0] == "exit" or data[0] == "quit":
       do_exit()
-    elif user_input == "request":
-      request()
-    elif user_input == "release":
-      release()
-    elif user_input == "queue":
-      print(mutex.queue)
-    # elif user_input == "balance":
-    #   pass
-      # start new thread that gets the balance
-    else:
-      # pid, data = user_input.split(maxsplit=1)
-      # sock = mutex.get_client(int(pid))
-      # sock.sendall(data.encode("utf8")) 
-      pass
+    elif data[0] == "balance":
+      get_balance()
+    elif data[0] == "transfer":
+      try: 
+        recipient = int(data[1])
+        amount = float(data[2])
+        if recipient not in [1, 2, 3] or recipient == PID:
+          raise NameError('InvalidPID')
+        make_transfer(recipient, amount)
+      except ValueError:
+        print("Invalid argument types. Please input a integer PID and float amount.")
+      except NameError:
+        print("Invalid PID recipient. Please input PID from 1-3 that is not own PID.")
+    elif data[0] == "queue":
+      print(MUTEX.queue)
 
-def listen(): 
-  print("Listening for Client Connections...")
-  threading.Thread(target=mutex.listen).start()
-  
-def connect():
-  print("Requesting Connections to Clients...")
+
+def connect_client(): 
+  info("Listening for Client Connections...")
+  threading.Thread(target=MUTEX.listen).start()
+
+  info("Requesting Connections to Clients...")
   for i in range(1, PID):
-    mutex.connect(i)
+    MUTEX.connect(i)
+  
 
-def request():
-  print("Sending REQUEST to Clients...")
-  threading.Thread(target=mutex.client_request).start()
+def connect_server(port=8000):
+  SOCKET.connect((socket.gethostbyname(), port))
 
-def release():
-  print("Sending RELEASE to Clients...")
-  threading.Thread(target=mutex.client_release).start()
 
-def balance():
-  threading.Thread(target=bc.get_balance).start()
+def get_balance():
+  MUTEX.acquire()
+  time.sleep(3)
+  print("Balance: $someValue")
+  # time.sleep(DELAY)
+  # SOCKET.sendall(pickle.dumps(("BALANCE", PID, 0, 0)))
+  # balance = pickle.loads(SOCKET.recv(1024))
+  # print(f"Balance: ${balance}")
+  MUTEX.release()
+
+
+def make_transfer(recipient, amount):
+  MUTEX.acquire()
+  time.sleep(5)
+  print("Transfer: $someStatus")
+  # time.sleep(DELAY)
+  # SOCKET.sendall(pickle.dumps(("TRANSFER", PID, recipient, amount)))
+  # status = pickle.loads(SOCKET.recv(1024))
+  # print(f"Transfer: {status}")
+  MUTEX.release()
+
 
 if __name__ == "__main__":
   if len(sys.argv) != 2:
@@ -63,12 +82,13 @@ if __name__ == "__main__":
     sys.exit()
 
   PID = int(sys.argv[1])
-  mutex = LamportMutex(PID)
+  MUTEX = LamportMutex(PID)
+  SOCKET = socket.socket()
 
-  # Connect to Client Machines
-  listen()
-  connect()
+  # Connect to Client & Server Machines
+  connect_client()
+  # connect_server()
 
-  # TODO: Connects to Server Machine
+  # Handle User Input
   handle_input()
   do_exit()
