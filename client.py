@@ -52,17 +52,18 @@ def connect_client():
   
 
 def connect_server(port=8000):
-  SOCKET.connect((socket.gethostbyname(), port))
+  SOCKET.connect((socket.gethostname(), port))
 
 
 def get_balance():
   MUTEX.acquire()
   time.sleep(3)
-  print("Balance: $someValue")
-  # time.sleep(DELAY)
-  # SOCKET.sendall(pickle.dumps(("BALANCE", PID, 0, 0)))
-  # balance = pickle.loads(SOCKET.recv(1024))
-  # print(f"Balance: ${balance}")
+  print("Fetching Balance ...")
+  time.sleep(DELAY)
+  SOCKET.sendall(pickle.dumps(("BALANCE", PID, 0, 0)))
+  time.sleep(5)
+  balance = pickle.loads(SOCKET.recv(1024))
+  print(f"Balance: ${balance}")
   MUTEX.release()
 
 
@@ -70,10 +71,11 @@ def make_transfer(recipient, amount):
   MUTEX.acquire()
   time.sleep(5)
   print("Transfer: $someStatus")
-  # time.sleep(DELAY)
-  # SOCKET.sendall(pickle.dumps(("TRANSFER", PID, recipient, amount)))
-  # status = pickle.loads(SOCKET.recv(1024))
-  # print(f"Transfer: {status}")
+  time.sleep(DELAY)
+  SOCKET.sendall(pickle.dumps(("TRANSFER", PID, recipient, amount)))
+  time.sleep(5)
+  status = pickle.loads(SOCKET.recv(1024))
+  print(f"Transfer: {status}")
   MUTEX.release()
 
 
@@ -88,7 +90,7 @@ if __name__ == "__main__":
 
   # Connect to Client & Server Machines
   connect_client()
-  # connect_server()
+  connect_server()
 
   # Handle User Input
   handle_input()

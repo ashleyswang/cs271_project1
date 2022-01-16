@@ -39,13 +39,14 @@ class Blockchain:
     self.state[sender_id]=init_balance
     return init_balance
 
+
 # The blockchain master traverses the blockchain,
 # calculates the balance and returns its value. Note: No new node is
 # added to the blockchain
   def get_balance(self, sender_id = ''):
     # start_block = chain[0]
     if sender_id not in self.state:
-      return self.init_client_balance(sender_id)
+      init_balance = self.init_client_balance(sender_id)
     return self.state[sender_id]
     # pass
   
@@ -72,3 +73,14 @@ class Blockchain:
 
     return "SUCCESS"
     # pass
+
+  def print_blockchain(self):
+    # print("inside this function")
+    # start = self.chain[0]
+    if len(self.chain)==1:
+      print("Blockchain is empty")
+    for block in self.chain[1:]:
+      print(f"Previous Hash: {block['previous_hash']}")
+      print(f"Client {block['sender_id']} pays Client {block['receiver_id']} ${block['amount']}")
+      print("----->")
+  
