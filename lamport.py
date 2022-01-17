@@ -109,20 +109,20 @@ class LamportMutex:
 
         if (data[0] == "REQUEST"):
           self.push_queue(data[1], data[2])
-          self.update_llc(data[1])
           info(f"Receive REQUEST {data[1:]}. Sending REPLY...")
+          self.update_llc(data[1])
           time.sleep(DELAY*self.pid)
           sock.sendall(pickle.dumps(("REPLY", self.llc, self.pid)))
         elif (data[0] == "RELEASE"):
           self.pop_queue()
-          self.update_llc(data[1])
           info(f"Receive RELEASE {data[1:]}.")
+          self.update_llc(data[1])
         elif (data[0] == "REPLY"):
           self.lock.acquire()
           self.reply_count += 1
           self.lock.release()
-          self.update_llc(value=data[1])
           info(f"Receive REPLY   {data[1:]}.")
+          self.update_llc(value=data[1])
       except EOFError:
         fail(f"Disconnected from Client {pid}")
         sock.close()
@@ -139,6 +139,7 @@ class LamportMutex:
     self.lock.acquire()
     if (value): self.llc = max(value, self.llc) + 1
     else: self.llc += 1
+    log(f"LLC: {(self.llc, self.pid)}")
     self.lock.release()
 
 

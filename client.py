@@ -30,7 +30,7 @@ def handle_input():
     elif data[0] == "transfer":
       try: 
         recipient = int(data[1])
-        amount = float(data[2].strip('$'))
+        amount = round(float(data[2].strip('$')), 2)
         if recipient not in [1, 2, 3] or recipient == PID:
           raise NameError('InvalidPID')
         make_transfer(recipient, amount)
@@ -57,31 +57,35 @@ def connect_server(port=8000):
 
 def get_balance():
   MUTEX.acquire()
+
   print("Fetching Balance ...")
+  MUTEX.update_llc()
   time.sleep(DELAY)
   SOCKET.sendall(pickle.dumps(("BALANCE", PID, 0, 0)))
-  time.sleep(DELAY)
+  
   balance = pickle.loads(SOCKET.recv(1024))
-  success(f"Balance: ${balance}")
-  time.sleep(1)
+  print(f"Balance: ${balance}", flush=True)
+
   MUTEX.release()
 
 
 def make_transfer(recipient, amount):
   MUTEX.acquire()
+
   print("Initiating Transfer ...")
+  MUTEX.update_llc()
   time.sleep(DELAY)
   SOCKET.sendall(pickle.dumps(("TRANSFER", PID, recipient, amount)))
-  time.sleep(DELAY)
-  status, sender_bal_before, sender_bal_after = pickle.loads(SOCKET.recv(1024))
-  info(f"Balance before transaction: {sender_bal_before}")
+  
+  status, bal_before, bal_after = pickle.loads(SOCKET.recv(1024))
+  print(f"Transfer: {status}", flush=True)
   if status=="SUCCESS":
-    success(f"Transfer: {status}")
+    print(f"Balance before transaction: {bal_before}", flush=True)
+    print(f"Balance after transaction: {bal_after}", flush=True)
   else:
-    fail(f"Transfer: {status}")
-    fail("You don't have enough balance to make this transaction.")
-  info(f"Balance after transaction: {sender_bal_after}")
-  time.sleep(1)
+    print("You don't have enough balance to make this transaction.")
+    print(f"Current Balance: {bal_before}", flush=True)
+  
   MUTEX.release()
 
 
