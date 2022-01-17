@@ -31,23 +31,25 @@ def handle_client(client_socket, address):
   while True:
     time.sleep(2)
     try:
-      data = pickle.loads(client_socket.recv(1024))
+      packets = client_socket.recv(1024)
     except socket.error as e:
       fail(f'Client {address} forcibly disconnected with {e}.')
       client_socket.close()
       break
-    if not data:
+    if not packets:
       fail(f'Client {address} disconnected.')
       client_socket.close()
       break
     else:
-      print("data === ", data)
-      bal_sender = blockchain.get_balance(sender_id=data[1])
-      bal_receiver = blockchain.get_balance(sender_id=data[2])
+      data = pickle.loads(packets)
+      info("data received : ", data)
+      sender_bal_before = blockchain.get_balance(sender_id=data[1])
+      bal_receiver_before = blockchain.get_balance(sender_id=data[2])
       if (data[0]=='BALANCE'):
         return_status = blockchain.get_balance(sender_id=data[1])
       elif (data[0]=='TRANSFER'):
-        return_status = blockchain.do_transfer(sender_id=data[1],receiver_id=data[2],amount=data[3])
+        status, sender_bal_after = blockchain.do_transfer(sender_id=data[1],receiver_id=data[2],amount=data[3])
+        return_status = [status, sender_bal_before, sender_bal_after]
       time.sleep(2)
       client_socket.send(pickle.dumps(return_status))
       notice(f'status returned for {data[0]} operation : ', return_status)

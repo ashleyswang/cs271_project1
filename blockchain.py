@@ -45,7 +45,7 @@ class Blockchain:
   def do_transfer(self, sender_id, receiver_id, amount):
     # check balance 
     if self.get_balance(sender_id)<amount:
-      return "INVALID"
+      return ["INVALID",self.state[sender_id]]
     
     # if valid, create a new block and add it to the blockchain
     last_block = self.last_block()
@@ -55,14 +55,16 @@ class Blockchain:
     
     # update the balance state dict for sender and receiver 
     self.set_state(sender_id=sender_id,receiver_id=receiver_id, amount=amount)
-    return "SUCCESS"
+    return ["SUCCESS",self.state[sender_id]]
 
   def print_blockchain(self):
     if len(self.chain)==1:
       print("Blockchain is empty")
-    for block in self.chain[1:]:
-      print(f"Previous Hash: {block['previous_hash']}")
-      print(f"Client {block['sender_id']} pays Client {block['receiver_id']} ${block['amount']}")
-      print("----->")
-    print("END")
+    else:
+      print("START")
+      for block in self.chain[1:]:
+        print(f"Previous Hash: {block['previous_hash']}")
+        print(f"Client {block['sender_id']} pays Client {block['receiver_id']} ${block['amount']}")
+        print("----->")
+      print("END")
   

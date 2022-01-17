@@ -8,7 +8,7 @@ import time
 from lamport import LamportMutex 
 from utilities import *
 
-DELAY = 2
+DELAY = 3
 
 def do_exit():
   MUTEX.close()
@@ -63,6 +63,7 @@ def get_balance():
   time.sleep(DELAY)
   balance = pickle.loads(SOCKET.recv(1024))
   success(f"Balance: ${balance}")
+  time.sleep(1)
   MUTEX.release()
 
 
@@ -72,11 +73,14 @@ def make_transfer(recipient, amount):
   time.sleep(DELAY)
   SOCKET.sendall(pickle.dumps(("TRANSFER", PID, recipient, amount)))
   time.sleep(DELAY)
-  status = pickle.loads(SOCKET.recv(1024))
+  status, sender_bal_before, sender_bal_after = pickle.loads(SOCKET.recv(1024))
+  info(f"Balance before transaction: {sender_bal_before}")
   if status=="SUCCESS":
     success(f"Transfer: {status}")
   else:
     fail(f"Transfer: {status}")
+  info(f"Balance after transaction: {sender_bal_after}")
+  time.sleep(1)
   MUTEX.release()
 
 
@@ -88,6 +92,8 @@ if __name__ == "__main__":
   PID = int(sys.argv[1])
   MUTEX = LamportMutex(PID)
   SOCKET = socket.socket()
+  notice(f"Client {PID}")
+  notice(f'Initial Balance : $10')
 
   # Connect to Client & Server Machines
   connect_client()
