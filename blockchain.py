@@ -1,5 +1,7 @@
 from hashlib import sha256
 import json
+from utilities import *
+
 
 
 class Blockchain:
@@ -59,10 +61,10 @@ class Blockchain:
     if len(self.chain)==1:
       print("Blockchain is empty")
     else:
-      print("START")
+      info("START")
       for block in self.chain[1:]:
         print(f"Previous Hash: {block['previous_hash']}")
-        print(f"Client {block['sender_id']} pays Client {block['receiver_id']} ${block['amount']}")
+        success(f"Client {block['sender_id']} pays Client {block['receiver_id']} ${block['amount']}")
         print("----->")
-      print("END")
+      info("END")
   
