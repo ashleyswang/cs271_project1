@@ -34,13 +34,9 @@ class Blockchain:
     if receiver_id in self.state:
       self.state[receiver_id] +=amount
 
-  def init_client_balance(self, sender_id, init_balance=10):
-    self.state[sender_id]=init_balance
-    return init_balance
-
   def get_balance(self, sender_id = ''):
     if sender_id not in self.state:
-      init_balance = self.init_client_balance(sender_id)
+      self.state[sender_id]= 10
     return self.state[sender_id]
   
   def do_transfer(self, sender_id, receiver_id, amount):
@@ -56,6 +52,7 @@ class Blockchain:
     # update the balance state dict for sender and receiver 
     self.set_state(sender_id=sender_id, receiver_id=receiver_id, amount=amount)
     return ["SUCCESS",self.state[sender_id]]
+
 
   def print_blockchain(self):
     if len(self.chain)==1:
