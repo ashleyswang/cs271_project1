@@ -30,7 +30,6 @@ def handle_client(client_socket, address):
   success(f'Server connected to {address}')
   while True:
     time.sleep(2)
-    client_socket.send(b'ready')
     try:
       data = pickle.loads(client_socket.recv(1024))
     except socket.error as e:
@@ -50,9 +49,8 @@ def handle_client(client_socket, address):
       elif (data[0]=='TRANSFER'):
         return_status = blockchain.do_transfer(sender_id=data[1],receiver_id=data[2],amount=data[3])
       time.sleep(2)
-      print('balance : ', return_status)
-      client_socket.sendall(pickle.dumps(return_status))
-      print("sent")
+      client_socket.send(pickle.dumps(return_status))
+      notice(f'status returned for {data[0]} operation : ', return_status)
 
 
 if __name__ == "__main__":

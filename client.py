@@ -57,25 +57,26 @@ def connect_server(port=8000):
 
 def get_balance():
   MUTEX.acquire()
-  time.sleep(3)
   print("Fetching Balance ...")
   time.sleep(DELAY)
   SOCKET.sendall(pickle.dumps(("BALANCE", PID, 0, 0)))
-  time.sleep(5)
+  time.sleep(DELAY)
   balance = pickle.loads(SOCKET.recv(1024))
-  print(f"Balance: ${balance}")
+  success(f"Balance: ${balance}")
   MUTEX.release()
 
 
 def make_transfer(recipient, amount):
   MUTEX.acquire()
-  time.sleep(5)
-  print("Transfer: $someStatus")
+  print("Initiating Transfer ...")
   time.sleep(DELAY)
   SOCKET.sendall(pickle.dumps(("TRANSFER", PID, recipient, amount)))
-  time.sleep(5)
+  time.sleep(DELAY)
   status = pickle.loads(SOCKET.recv(1024))
-  print(f"Transfer: {status}")
+  if status=="SUCCESS":
+    success(f"Transfer: {status}")
+  else:
+    fail(f"Transfer: {status}")
   MUTEX.release()
 
 
