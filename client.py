@@ -64,7 +64,7 @@ def get_balance():
   SOCKET.sendall(pickle.dumps(("BALANCE", PID, 0, 0)))
   
   balance = pickle.loads(SOCKET.recv(1024))
-  print(f"Balance: ${balance}", flush=True)
+  print(f"Balance: ${balance:.2f}", flush=True)
 
   MUTEX.release()
 
@@ -80,11 +80,11 @@ def make_transfer(recipient, amount):
   status, bal_before, bal_after = pickle.loads(SOCKET.recv(1024))
   print(f"Transfer: {status}", flush=True)
   if status=="SUCCESS":
-    print(f"Balance before transaction: {bal_before}", flush=True)
-    print(f"Balance after transaction: {bal_after}", flush=True)
+    print(f"    Balance before: ${bal_before:.2f}", flush=True)
+    print(f"    Balance after : ${bal_after:.2f}", flush=True)
   else:
-    print("You don't have enough balance to make this transaction.")
-    print(f"Current Balance: {bal_before}", flush=True)
+    print("    You don't have enough balance to make this transaction.")
+    print(f"    Current Balance: {bal_before:.2f}", flush=True)
   
   MUTEX.release()
 
@@ -97,8 +97,9 @@ if __name__ == "__main__":
   PID = int(sys.argv[1])
   MUTEX = LamportMutex(PID)
   SOCKET = socket.socket()
+  
   notice(f"Client {PID}")
-  notice(f'Initial Balance : $10')
+  notice(f'Initial Balance : $10.00')
 
   # Connect to Client & Server Machines
   connect_client()

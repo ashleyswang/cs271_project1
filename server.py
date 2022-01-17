@@ -43,17 +43,19 @@ def handle_client(socket, address):
       break
     else:
       data = pickle.loads(packets)
-      info("data received : ", data)
+      notice(f"Received {data[0]} from Client {data[1]}")
       sender_bal_before = BLOCKCHAIN.get_balance(sender_id=data[1])
-      bal_receiver_before = BLOCKCHAIN.get_balance(sender_id=data[2])
+      receiver_bal_before = BLOCKCHAIN.get_balance(sender_id=data[2])
       if (data[0]=='BALANCE'):
         return_status = BLOCKCHAIN.get_balance(sender_id=data[1])
+        info(f"Client {data[1]}: ${return_status:.2f}")
       elif (data[0]=='TRANSFER'):
         status, sender_bal_after = BLOCKCHAIN.do_transfer(sender_id=data[1],receiver_id=data[2],amount=data[3])
+        receiver_bal_after = BLOCKCHAIN.get_balance(sender_id=data[2])
         return_status = [status, sender_bal_before, sender_bal_after]
+        info(f"Transfer: {status}\n{12*' '}Client {data[1]}: {sender_bal_before:.2f} --> {sender_bal_after:.2f}\n{12*' '}Client {data[2]}: {receiver_bal_before:.2f} --> {receiver_bal_after:.2f}")
       time.sleep(DELAY)
       socket.send(pickle.dumps(return_status))
-      notice(f'status returned for {data[0]} operation : ', return_status)
 
 
 if __name__ == "__main__":

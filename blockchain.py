@@ -30,9 +30,9 @@ class Blockchain:
 
   def set_state(self, sender_id, receiver_id,amount):
     if sender_id in self.state and self.state[sender_id]>amount:
-      self.state[sender_id] -=amount
+      self.state[sender_id] = round(self.state[sender_id]-amount, 2)
     if receiver_id in self.state:
-      self.state[receiver_id] +=amount
+      self.state[receiver_id] = round(self.state[receiver_id]+amount, 2)
 
   def get_balance(self, sender_id = ''):
     if sender_id not in self.state:
@@ -58,10 +58,10 @@ class Blockchain:
     if len(self.chain)==1:
       print("Blockchain is empty")
     else:
-      info("START")
+      log("START")
       for block in self.chain[1:]:
         print(f"Previous Hash: {block['previous_hash']}")
         success(f"Client {block['sender_id']} pays Client {block['receiver_id']} ${block['amount']}")
         print("----->")
-      info("END")
+      log("END")
   

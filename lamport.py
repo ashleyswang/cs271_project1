@@ -62,10 +62,10 @@ class LamportMutex:
   Acquires distributed mutex for client. Returns once lock is retrieved.
   '''
   def acquire(self):
-    notice("Sending REQUEST to Clients...")
     self.update_llc()
     self.push_queue(self.llc, self.pid)
     llc, pid = self.llc, self.pid
+    notice(f"Sending REQUEST {(llc, pid)} to Clients...")
     time.sleep(DELAY)
 
     conns_count = 0
@@ -88,10 +88,11 @@ class LamportMutex:
   Releases distributed mutex to be used by next client.
   '''
   def release(self):
-    notice("Sending RELEASE to Clients...")
     self.pop_queue()
     self.update_llc()
+    notice(f"Sending RELEASE {(self.llc, self.pid)} to Clients...")
     time.sleep(DELAY)
+    
     for sock in self.conns:
       if sock is not None:
         sock.sendall(pickle.dumps(("RELEASE", self.llc, self.pid)))

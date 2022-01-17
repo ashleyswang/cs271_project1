@@ -8,7 +8,7 @@ class colors:
   GREY = '\033[90m'
   ENDC = '\033[0m'
 
-def logs(*args, **kwargs):
+def log(*args, **kwargs):
   debug_print(colors.GREY, *args, colors.ENDC, **kwargs)
 
 
