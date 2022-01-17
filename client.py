@@ -79,6 +79,7 @@ def make_transfer(recipient, amount):
     success(f"Transfer: {status}")
   else:
     fail(f"Transfer: {status}")
+    fail("You don't have enough balance to make this transaction.")
   info(f"Balance after transaction: {sender_bal_after}")
   time.sleep(1)
   MUTEX.release()
