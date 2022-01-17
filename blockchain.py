@@ -1,5 +1,8 @@
-# TODO: class that handles requests to server
+# TODO: server helper class
 
 class Blockchain:
   def get_balance():
-    mutex.client_request()
+    pass
+  
+  def do_transfer():
+    pass
