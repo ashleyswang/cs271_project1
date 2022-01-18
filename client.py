@@ -8,7 +8,7 @@ import time
 from lamport import LamportMutex 
 from utilities import *
 
-DELAY = 2
+DELAY = 3
 
 def do_exit():
   MUTEX.close()
@@ -30,7 +30,7 @@ def handle_input():
     elif data[0] == "transfer":
       try: 
         recipient = int(data[1])
-        amount = float(data[2].strip('$'))
+        amount = round(float(data[2].strip('$')), 2)
         if recipient not in [1, 2, 3] or recipient == PID:
           raise NameError('InvalidPID')
         threading.Thread(target=make_transfer, args=(recipient, amount)).start()
@@ -60,6 +60,7 @@ def connect_client():
   
 
 def connect_server(port=8000):
+<<<<<<< HEAD
   try:
     SOCKET.connect((socket.gethostname(), port))
     SOCKET.sendall(pickle.dumps(PID))
@@ -68,12 +69,19 @@ def connect_server(port=8000):
     notice(f"Balance: ${balance:.2f}")
   except ConnectionRefusedError:
     fail(f"Failed to connect to server.")
+=======
+  SOCKET.connect((socket.gethostname(), port))
+>>>>>>> cc3dbca2af4615c535bf58e7392c4eb52acc66a9
 
 
 def get_balance():
   MUTEX.acquire()
 
+<<<<<<< HEAD
   print("Fetching Balance...")
+=======
+  print("Fetching Balance ...")
+>>>>>>> cc3dbca2af4615c535bf58e7392c4eb52acc66a9
   MUTEX.update_llc()
   time.sleep(DELAY)
   SOCKET.sendall(pickle.dumps(("BALANCE", PID, 0, 0)))
@@ -87,7 +95,11 @@ def get_balance():
 def make_transfer(recipient, amount):
   MUTEX.acquire()
 
+<<<<<<< HEAD
   print("Initiating Transfer...")
+=======
+  print("Initiating Transfer ...")
+>>>>>>> cc3dbca2af4615c535bf58e7392c4eb52acc66a9
   MUTEX.update_llc()
   time.sleep(DELAY)
   SOCKET.sendall(pickle.dumps(("TRANSFER", PID, recipient, amount)))
@@ -114,10 +126,14 @@ if __name__ == "__main__":
   SOCKET = socket.socket()
   
   notice(f"Client {PID}")
+<<<<<<< HEAD
+=======
+  notice(f'Initial Balance : $10.00')
+>>>>>>> cc3dbca2af4615c535bf58e7392c4eb52acc66a9
 
   # Connect to Client & Server Machines
   connect_client()
-  # connect_server()
+  connect_server()
 
   # Handle User Input
   handle_input()

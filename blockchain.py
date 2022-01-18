@@ -1,4 +1,8 @@
-# TODO: server helper class
+from hashlib import sha256
+import json
+from utilities import *
+
+
 
 class Blockchain:
   def __init__(self):
@@ -35,5 +39,29 @@ class Blockchain:
       self.state[sender_id]= 10
     return self.state[sender_id]
   
-  def do_transfer():
-    pass
+  def do_transfer(self, sender_id, receiver_id, amount):
+    # check balance 
+    if self.get_balance(sender_id)<amount:
+      return ["INCORRECT",self.state[sender_id]]
+    
+    # if valid, create a new block and add it to the blockchain
+    last_block = self.last_block()
+    previous_hash = self.hashify(last_block)
+    block = self.new_block(sender_id=sender_id, receiver_id=receiver_id, previous_hash=previous_hash, amount=amount)
+    
+    # update the balance state dict for sender and receiver 
+    self.set_state(sender_id=sender_id, receiver_id=receiver_id, amount=amount)
+    return ["SUCCESS",self.state[sender_id]]
+
+
+  def print_blockchain(self):
+    if len(self.chain)==1:
+      print("Blockchain is empty")
+    else:
+      log("START")
+      for block in self.chain[1:]:
+        print(f"Previous Hash: {block['previous_hash']}")
+        success(f"Client {block['sender_id']} pays Client {block['receiver_id']} ${block['amount']}")
+        print("----->")
+      log("END")
+  

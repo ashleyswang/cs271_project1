@@ -1,33 +1,38 @@
 import time
 
 class colors:
-  INFO = '\033[90m'     # Grey
-  NOTICE = '\033[34m'   # Blue
-  SUCCESS = '\033[32m'  # Green
-  FAIL = '\033[91m'     # Red
-  ENDC = '\033[0m'      # Default
+  RED = '\033[91m'
+  YELLOW = '\033[33m'
+  GREEN = '\033[32m'
+  BLUE = '\033[34m'
+  GREY = '\033[90m'
+  ENDC = '\033[0m'
+
+def log(*args, **kwargs):
+  debug_print(colors.GREY, *args, colors.ENDC, **kwargs)
 
 
-# Grey
 def info(*args, **kwargs):
-  debug_print(colors.INFO, *args, colors.ENDC, **kwargs)
+  debug_print(colors.BLUE, *args, colors.ENDC, **kwargs)
 
 
-# Blue
 def notice(*args, **kwargs):
-  debug_print(colors.NOTICE, *args, colors.ENDC, **kwargs)
+  debug_print(colors.YELLOW, *args, colors.ENDC, **kwargs)
 
 
-# Green
 def success(*args, **kwargs):
-  debug_print(colors.SUCCESS, *args, colors.ENDC, **kwargs)
+  debug_print(colors.GREEN, *args, colors.ENDC, **kwargs)
 
 
-# Red
 def fail(*args, **kwargs):
-  debug_print(colors.FAIL, *args, colors.ENDC, **kwargs)
+  debug_print(colors.RED, *args, colors.ENDC, **kwargs)
 
 
 def debug_print(color=colors.ENDC, *args, **kwargs):
   timestamp = time.strftime("%H:%M:%S", time.localtime())
   print(f"{color}{timestamp}   ", *args, **kwargs)
+
+
+if __name__ == "__main__":
+  for i in range(100):
+    print(f'\033[{i}m {i} \033[0m')

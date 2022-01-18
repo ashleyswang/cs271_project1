@@ -65,7 +65,6 @@ class LamportMutex:
   Acquires distributed mutex for client. Returns once lock is retrieved.
   '''
   def acquire(self):
-    notice("Sending REQUEST to Clients...")
     self.update_llc()
     llc, pid = self.llc, self.pid
     self.push_queue(llc, pid)
@@ -93,10 +92,11 @@ class LamportMutex:
   Releases distributed mutex to be used by next client.
   '''
   def release(self):
-    notice("Sending RELEASE to Clients...")
     self.pop_queue()
     self.update_llc()
+    notice(f"Sending RELEASE {(self.llc, self.pid)} to Clients...")
     time.sleep(DELAY)
+    
     for sock in self.conns:
       if sock is not None:
         sock.sendall(pickle.dumps(("RELEASE", self.llc, self.pid)))
@@ -114,21 +114,21 @@ class LamportMutex:
 
         if (data[0] == "REQUEST"):
           self.push_queue(data[1], data[2])
-          self.update_llc(data[1])
           info(f"Receive REQUEST {data[1:]}. Sending REPLY...")
+          self.update_llc(data[1])
           time.sleep(DELAY*self.pid)
           sock.sendall(pickle.dumps(
             ("REPLY", self.llc, self.pid, (data[1], data[2]))))
         elif (data[0] == "RELEASE"):
           self.pop_queue()
-          self.update_llc(data[1])
           info(f"Receive RELEASE {data[1:]}.")
+          self.update_llc(data[1])
         elif (data[0] == "REPLY"):
           self.lock.acquire()
           self.requests[data[3]] += 1
           self.lock.release()
-          self.update_llc(value=data[1])
           info(f"Receive REPLY   {data[1:]}.")
+          self.update_llc(value=data[1])
       except EOFError:
         fail(f"Disconnected from Client {pid}")
         sock.close()
@@ -145,6 +145,7 @@ class LamportMutex:
     self.lock.acquire()
     if (value): self.llc = max(value, self.llc) + 1
     else: self.llc += 1
+    log(f"LLC: {(self.llc, self.pid)}")
     self.lock.release()
 
 
