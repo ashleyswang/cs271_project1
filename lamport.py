@@ -16,7 +16,7 @@ class LamportMutex:
 
     self.queue = []
     self.conns = [None, None, None, None]
-    self.reply_count = 0
+    self.requests = {}
     
     self.lock = threading.Lock()
 
@@ -43,13 +43,16 @@ class LamportMutex:
   Connects to client with input PID.
   '''
   def connect(self, pid):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    address = (socket.gethostname(), 5000+pid)
-    sock.connect(address)
-    self.conns[pid] = sock
-    sock.sendall(pickle.dumps(self.pid))
-    success(f"Connected to Client {pid}")
-    threading.Thread(target=self.client_respond, args=(sock, pid)).start()
+    try:
+      sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      address = (socket.gethostname(), 5000+pid)
+      sock.connect(address)
+      self.conns[pid] = sock
+      sock.sendall(pickle.dumps(self.pid))
+      success(f"Connected to Client {pid}")
+      threading.Thread(target=self.client_respond, args=(sock, pid)).start()
+    except ConnectionRefusedError:
+      fail(f"Failed to connect to Client {pid}.")
 
   def close(self):
     for sock in self.conns:
@@ -64,8 +67,10 @@ class LamportMutex:
   def acquire(self):
     notice("Sending REQUEST to Clients...")
     self.update_llc()
-    self.push_queue(self.llc, self.pid)
     llc, pid = self.llc, self.pid
+    self.push_queue(llc, pid)
+    self.requests[llc, pid] = 0
+    notice(f"Sending REQUEST {(llc, pid)} to Clients...")
     time.sleep(DELAY)
 
     conns_count = 0
@@ -74,9 +79,9 @@ class LamportMutex:
         sock.sendall(pickle.dumps(("REQUEST", llc, pid)))
         conns_count += 1
     
-    while self.reply_count < conns_count: continue
+    while self.requests[llc, pid] < conns_count: continue
     self.lock.acquire()
-    self.reply_count = 0
+    self.requests.pop((llc, pid))
     self.lock.release()
     notice(f"Received all REPLIES for {(llc, pid)}. Waiting until head of queue...")
     
@@ -112,14 +117,15 @@ class LamportMutex:
           self.update_llc(data[1])
           info(f"Receive REQUEST {data[1:]}. Sending REPLY...")
           time.sleep(DELAY*self.pid)
-          sock.sendall(pickle.dumps(("REPLY", self.llc, self.pid)))
+          sock.sendall(pickle.dumps(
+            ("REPLY", self.llc, self.pid, (data[1], data[2]))))
         elif (data[0] == "RELEASE"):
           self.pop_queue()
           self.update_llc(data[1])
           info(f"Receive RELEASE {data[1:]}.")
         elif (data[0] == "REPLY"):
           self.lock.acquire()
-          self.reply_count += 1
+          self.requests[data[3]] += 1
           self.lock.release()
           self.update_llc(value=data[1])
           info(f"Receive REPLY   {data[1:]}.")

@@ -26,20 +26,28 @@ def handle_input():
     if data[0] == "exit" or data[0] == "quit":
       do_exit()
     elif data[0] == "balance":
-      get_balance()
+      threading.Thread(target=get_balance).start()
     elif data[0] == "transfer":
       try: 
         recipient = int(data[1])
         amount = float(data[2].strip('$'))
         if recipient not in [1, 2, 3] or recipient == PID:
           raise NameError('InvalidPID')
-        make_transfer(recipient, amount)
+        threading.Thread(target=make_transfer, args=(recipient, amount)).start()
       except ValueError:
         print("Invalid argument types. Please input a integer PID and float amount.")
       except NameError:
         print("Invalid PID recipient. Please input PID from 1-3 that is not own PID.")
     elif data[0] == "queue":
       print(MUTEX.queue)
+    elif data[0] == "connect":
+      try:
+        pid = int(data[1])
+        MUTEX.connect(pid)
+      except Exception:
+        connect_server()
+    else:
+      print("Invalid command. Valid inputs are 'balance', 'transfer', or 'exit/quit'.")
 
 
 def connect_client(): 
@@ -52,28 +60,47 @@ def connect_client():
   
 
 def connect_server(port=8000):
-  SOCKET.connect((socket.gethostbyname(), port))
+  try:
+    SOCKET.connect((socket.gethostname(), port))
+    SOCKET.sendall(pickle.dumps(PID))
+    balance = pickle.loads(SOCKET.recv(1024))
+    success(f"Connected to Blockchain Server")
+    notice(f"Balance: ${balance:.2f}")
+  except ConnectionRefusedError:
+    fail(f"Failed to connect to server.")
 
 
 def get_balance():
   MUTEX.acquire()
-  time.sleep(3)
-  print("Balance: $someValue")
-  # time.sleep(DELAY)
-  # SOCKET.sendall(pickle.dumps(("BALANCE", PID, 0, 0)))
-  # balance = pickle.loads(SOCKET.recv(1024))
-  # print(f"Balance: ${balance}")
+
+  print("Fetching Balance...")
+  MUTEX.update_llc()
+  time.sleep(DELAY)
+  SOCKET.sendall(pickle.dumps(("BALANCE", PID, 0, 0)))
+  
+  balance = pickle.loads(SOCKET.recv(1024))
+  print(f"Balance: ${balance:.2f}", flush=True)
+
   MUTEX.release()
 
 
 def make_transfer(recipient, amount):
   MUTEX.acquire()
-  time.sleep(5)
-  print("Transfer: $someStatus")
-  # time.sleep(DELAY)
-  # SOCKET.sendall(pickle.dumps(("TRANSFER", PID, recipient, amount)))
-  # status = pickle.loads(SOCKET.recv(1024))
-  # print(f"Transfer: {status}")
+
+  print("Initiating Transfer...")
+  MUTEX.update_llc()
+  time.sleep(DELAY)
+  SOCKET.sendall(pickle.dumps(("TRANSFER", PID, recipient, amount)))
+  
+  status, bal_before, bal_after = pickle.loads(SOCKET.recv(1024))
+  print(f"Transfer: {status}", flush=True)
+  if status=="SUCCESS":
+    print(f"    Balance before: ${bal_before:.2f}", flush=True)
+    print(f"    Balance after : ${bal_after:.2f}", flush=True)
+  else:
+    print("    You don't have enough balance to make this transaction.")
+    print(f"    Current Balance: {bal_before:.2f}", flush=True)
+  
   MUTEX.release()
 
 
@@ -85,6 +112,8 @@ if __name__ == "__main__":
   PID = int(sys.argv[1])
   MUTEX = LamportMutex(PID)
   SOCKET = socket.socket()
+  
+  notice(f"Client {PID}")
 
   # Connect to Client & Server Machines
   connect_client()

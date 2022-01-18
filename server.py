@@ -43,8 +43,22 @@ def handle_client(client_socket, address, output_file):
       print('Received invalid word \'{word}\' from {address}')
       client_socket.send(b'error')
     else:
-      output_file.write(word + ' ')
-      output_file.flush()
+      data = pickle.loads(packets)
+      notice(f"Received {data[0]} from Client {data[1]}")
+      s_bal_before = BLOCKCHAIN.get_balance(sender_id=data[1])
+      r_bal_before = BLOCKCHAIN.get_balance(sender_id=data[2])
+      if (data[0]=='BALANCE'):
+        return_status = BLOCKCHAIN.get_balance(sender_id=data[1])
+        info(f"Client {data[1]}: ${return_status:.2f}")
+      elif (data[0]=='TRANSFER'):
+        status, s_bal_after = BLOCKCHAIN.do_transfer(sender_id=data[1],receiver_id=data[2],amount=data[3])
+        r_bal_after = BLOCKCHAIN.get_balance(sender_id=data[2])
+        return_status = [status, s_bal_before, s_bal_after]
+        info(f"Transfer: {status}\n" +
+             f"{12*' '}Client {data[1]}: ${s_bal_before:.2f} --> ${s_bal_after:.2f}\n" + 
+             f"{12*' '}Client {data[2]}: ${r_bal_before:.2f} --> ${r_bal_after:.2f}")
+      time.sleep(DELAY)
+      socket.send(pickle.dumps(return_status))
 
 
 if __name__ == "__main__":
@@ -60,8 +74,16 @@ if __name__ == "__main__":
 
     output_file = open(sys.argv[1], 'w')
 
-    threading.Thread(target=handle_input, args=(
-        output_file, server_socket)).start()
+  threading.Thread(target=handle_input).start()
+  
+  while True:
+    try:
+      sock, address = SOCKET.accept()
+      pid = pickle.loads(sock.recv(1024))
+      sock.sendall(pickle.dumps(BLOCKCHAIN.get_balance(pid)))
+      threading.Thread(target=handle_client, args=(sock, address)).start()
+    except KeyboardInterrupt:
+      do_exit()
 
     while True:
         try:
