@@ -20,33 +20,32 @@ def handle_input():
   while True:
     try:
       data = input().split()
-    except Exception: 
-      print("Invalid command. Valid inputs are 'balance', 'transfer', or 'exit/quit'.")
     
-    if data[0] == "exit" or data[0] == "quit":
-      do_exit()
-    elif data[0] == "balance":
-      threading.Thread(target=get_balance).start()
-    elif data[0] == "transfer":
-      try: 
-        recipient = int(data[1])
-        amount = round(float(data[2].strip('$')), 2)
-        if recipient not in [1, 2, 3] or recipient == PID:
-          raise NameError('InvalidPID')
-        threading.Thread(target=make_transfer, args=(recipient, amount)).start()
-      except ValueError:
-        print("Invalid argument types. Please input a integer PID and float amount.")
-      except NameError:
-        print("Invalid PID recipient. Please input PID from 1-3 that is not own PID.")
-    elif data[0] == "queue":
-      print(MUTEX.queue)
-    elif data[0] == "connect":
-      try:
-        pid = int(data[1])
-        MUTEX.connect(pid)
-      except Exception:
-        connect_server()
-    else:
+      if data[0] == "exit" or data[0] == "quit":
+        do_exit()
+      elif data[0] == "balance":
+        threading.Thread(target=get_balance).start()
+      elif data[0] == "transfer":
+        try: 
+          recipient = int(data[1])
+          amount = round(float(data[2].strip('$')), 2)
+          if recipient not in [1, 2, 3] or recipient == PID:
+            raise NameError('InvalidPID')
+          threading.Thread(target=make_transfer, args=(recipient, amount)).start()
+        except ValueError:
+          print("Invalid argument types. Please input a integer PID and float amount.")
+        except NameError:
+          print("Invalid PID recipient. Please input PID from 1-3 that is not own PID.")
+      elif data[0] == "queue":
+        print(MUTEX.queue)
+      elif data[0] == "connect":
+        try:
+          MUTEX.connect(int(data[1]))
+        except (IndexError, ValueError):
+          connect_server()
+      else:
+        print("Invalid command. Valid inputs are 'balance', 'transfer', or 'exit/quit'.")
+    except Exception: 
       print("Invalid command. Valid inputs are 'balance', 'transfer', or 'exit/quit'.")
 
 
@@ -72,35 +71,37 @@ def connect_server(port=8000):
 
 def get_balance():
   MUTEX.acquire()
-
-  print("Fetching Balance...")
+  print("Getting Balance...")
   MUTEX.update_llc()
   time.sleep(DELAY)
   SOCKET.sendall(pickle.dumps(("BALANCE", PID, 0, 0)))
   
-  balance = pickle.loads(SOCKET.recv(1024))
-  print(f"Balance: ${balance:.2f}", flush=True)
-
+  try:
+    balance = pickle.loads(SOCKET.recv(1024))
+    print(f"Balance: ${balance:.2f}", flush=True)
+  except EOFError:
+    fail("Disconnected from server.")
   MUTEX.release()
 
 
 def make_transfer(recipient, amount):
   MUTEX.acquire()
-
-  print("Initiating Transfer...")
+  print(f"Transfering {amount} to Client {recipient}...")
   MUTEX.update_llc()
   time.sleep(DELAY)
   SOCKET.sendall(pickle.dumps(("TRANSFER", PID, recipient, amount)))
   
-  status, bal_before, bal_after = pickle.loads(SOCKET.recv(1024))
-  print(f"Transfer: {status}", flush=True)
-  if status=="SUCCESS":
-    print(f"    Balance before: ${bal_before:.2f}", flush=True)
-    print(f"    Balance after : ${bal_after:.2f}", flush=True)
-  else:
-    print("    You don't have enough balance to make this transaction.")
-    print(f"    Current Balance: {bal_before:.2f}", flush=True)
-  
+  try:
+    status, bal_before, bal_after = pickle.loads(SOCKET.recv(1024))
+    print(f"Transfer: {status}", flush=True)
+    if status=="SUCCESS":
+      print(f"    Balance before: ${bal_before:.2f}", flush=True)
+      print(f"    Balance after : ${bal_after:.2f}", flush=True)
+    else:
+      print("    You don't have enough balance to make this transaction.")
+      print(f"    Current Balance: {bal_before:.2f}", flush=True)
+  except EOFError:
+    fail("Disconnected from server.")
   MUTEX.release()
 
 

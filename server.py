@@ -23,7 +23,7 @@ def handle_input():
       if inp == 'exit':
         do_exit()
       elif inp=='print':
-        BLOCKCHAIN.print_blockchain()
+        BCHAIN.print_blockchain()
     except EOFError:
       pass
 
@@ -42,22 +42,22 @@ def handle_client(socket, address):
       socket.close()
       break
     else:
-      data = pickle.loads(packets)
-      notice(f"Received {data[0]} from Client {data[1]}")
-      s_bal_before = BLOCKCHAIN.get_balance(sender_id=data[1])
-      r_bal_before = BLOCKCHAIN.get_balance(sender_id=data[2])
-      if (data[0]=='BALANCE'):
-        return_status = BLOCKCHAIN.get_balance(sender_id=data[1])
-        info(f"Client {data[1]}: ${return_status:.2f}")
-      elif (data[0]=='TRANSFER'):
-        status, s_bal_after = BLOCKCHAIN.do_transfer(sender_id=data[1],receiver_id=data[2],amount=data[3])
-        r_bal_after = BLOCKCHAIN.get_balance(sender_id=data[2])
-        return_status = [status, s_bal_before, s_bal_after]
+      op, sender, receiver, amount = pickle.loads(packets)
+      notice(f"Received {op} from Client {sender}")
+    
+      if (op == 'BALANCE'):
+        response = BCHAIN.get_balance(sender)
+        info(f"Client {sender}: ${response:.2f}")
+      elif (op == 'TRANSFER'):
+        sender_balance = BCHAIN.get_balance(sender)
+        receiver_balance = BCHAIN.get_balance(receiver)
+        status = BCHAIN.make_transfer(sender, receiver, amount)
+        response = [status, sender_balance, BCHAIN.get_balance(sender)]
         info(f"Transfer: {status}\n" +
-             f"{12*' '}Client {data[1]}: ${s_bal_before:.2f} --> ${s_bal_after:.2f}\n" + 
-             f"{12*' '}Client {data[2]}: ${r_bal_before:.2f} --> ${r_bal_after:.2f}")
+             f"{12*' '}Client {sender}: ${sender_balance:.2f} --> ${BCHAIN.get_balance(sender):.2f}\n" + 
+             f"{12*' '}Client {receiver}: ${receiver_balance:.2f} --> ${BCHAIN.get_balance(receiver):.2f}")
       time.sleep(DELAY)
-      socket.send(pickle.dumps(return_status))
+      socket.send(pickle.dumps(response))
 
 
 if __name__ == "__main__":
@@ -69,7 +69,7 @@ if __name__ == "__main__":
   SOCKET.listen(32)
   notice(f'Server listening on port {PORT}.')
 
-  BLOCKCHAIN = Blockchain()
+  BCHAIN = Blockchain()
 
   threading.Thread(target=handle_input).start()
   
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     try:
       sock, address = SOCKET.accept()
       pid = pickle.loads(sock.recv(1024))
-      sock.sendall(pickle.dumps(BLOCKCHAIN.get_balance(pid)))
+      sock.sendall(pickle.dumps(BCHAIN.get_balance(pid)))
       threading.Thread(target=handle_client, args=(sock, address)).start()
     except KeyboardInterrupt:
       do_exit()

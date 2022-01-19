@@ -110,7 +110,6 @@ class LamportMutex:
     while True:
       try:
         data = pickle.loads(sock.recv(1024))
-        # log(data)
 
         if (data[0] == "REQUEST"):
           self.push_queue(data[1], data[2])
