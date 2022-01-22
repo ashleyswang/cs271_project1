@@ -8,7 +8,7 @@ import time
 from blockchain import Blockchain
 from utilities import *
 
-DELAY = 2
+DELAY = 3
 
 def do_exit():
   sys.stdout.flush()

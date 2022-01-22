@@ -7,7 +7,7 @@ import time
 
 from utilities import *
 
-DELAY = 1
+DELAY = 2
 
 class LamportMutex:
   def __init__(self, pid):
